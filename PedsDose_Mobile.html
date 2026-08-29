@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f766e">
+<title>PedsDose — Pediatric Emergency Drug Reference</title>
+<style>
+:root{
+  --bg:#f5f7fb;--panel:#fff;--text:#172033;--muted:#667085;--line:#e5e9f2;
+  --primary:#0f766e;--primary2:#14b8a6;--shadow:0 10px 30px rgba(16,24,40,.07);
+  --danger:#ef4444;--warning:#f59e0b;--blue:#2563eb;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh}
+.topbar{position:sticky;top:0;z-index:20;background:rgba(245,247,251,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top-inner{max-width:1500px;margin:auto;padding:14px 22px;display:flex;gap:16px;align-items:center}
+.brand{display:flex;align-items:center;gap:10px;min-width:230px}
+.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#0f766e,#22c55e);display:grid;place-items:center;color:#fff;font-size:24px;box-shadow:0 8px 18px rgba(15,118,110,.22)}
+.brand h1{font-size:19px;margin:0;letter-spacing:-.3px}.brand p{font-size:11px;color:var(--muted);margin:2px 0 0}
+.search-wrap{flex:1;position:relative}.search-wrap span{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:20px;color:#98a2b3}.search{width:100%;height:46px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:0 44px;outline:none;box-shadow:0 2px 7px rgba(16,24,40,.03)}.search:focus{border-color:#7dd3c7;box-shadow:0 0 0 4px rgba(20,184,166,.10)}
+.weight-box{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;height:46px;overflow:hidden;white-space:nowrap}
+.weight-box label{padding:0 11px;color:var(--muted);font-size:12px;font-weight:700}.weight-box button{width:36px;height:100%;border:0;background:#f8fafc;font-size:21px;color:#475467}.weight-box input{width:60px;height:100%;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);text-align:center;font-weight:800;outline:none}.unit{font-size:11px;color:var(--muted);padding:0 9px;font-weight:700}
+.icon-btn{border:1px solid var(--line);background:#fff;width:46px;height:46px;border-radius:14px;font-size:19px}
+.layout{max-width:1500px;margin:auto;display:grid;grid-template-columns:220px 1fr;gap:20px;padding:20px 22px}
+.sidebar{position:sticky;top:82px;height:calc(100vh - 102px);overflow:auto}
+.nav{display:grid;gap:8px}.nav button{border:1px solid transparent;background:transparent;border-radius:13px;padding:11px 12px;text-align:left;color:#475467;font-weight:700;display:flex;gap:10px;align-items:center}.nav button:hover{background:#fff;border-color:var(--line)}.nav button.active{background:#fff;border-color:var(--line);box-shadow:var(--shadow);color:var(--primary)}
+.side-note{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;font-size:11px;line-height:1.55;color:var(--muted)}
+.content{min-width:0}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:15px;margin:3px 0 18px}.hero h2{margin:0;font-size:25px;letter-spacing:-.7px}.hero p{margin:5px 0 0;color:var(--muted);font-size:13px}.actions{display:flex;gap:8px}.small-btn{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px 12px;font-weight:700;color:#475467}.primary-btn{background:var(--primary);color:#fff;border-color:var(--primary)}
+.categories{display:grid;gap:18px}
+.category{border-radius:18px;border:1px solid var(--cat-line);background:var(--cat-bg);overflow:hidden}
+.cat-head{padding:13px 15px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--cat-line)}.cat-title{display:flex;align-items:center;gap:9px;color:var(--cat);font-weight:900;font-size:14px}.cat-icon{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.7);display:grid;place-items:center}.cat-count{font-size:11px;color:var(--muted);font-weight:700}
+.cards{padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.card{background:rgba(255,255,255,.86);border:1px solid var(--cat-line);border-radius:14px;padding:13px;position:relative;min-height:164px;transition:.18s}.card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(16,24,40,.07)}
+.card-top{display:flex;justify-content:space-between;gap:8px}.drug{font-size:14px;font-weight:900;line-height:1.25}.route{font-size:10px;color:var(--cat);font-weight:900;background:rgba(255,255,255,.8);border:1px solid var(--cat-line);padding:4px 6px;border-radius:7px;white-space:nowrap}
+.indication{display:inline-block;margin-top:6px;font-size:10px;color:#596579;background:#f8fafc;border-radius:6px;padding:3px 7px;font-weight:700}
+.dose-label{margin-top:13px;font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.calc{font-size:21px;font-weight:950;color:var(--cat);line-height:1.2;margin-top:2px}.base{font-size:11px;color:#475467;margin-top:3px}.note{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.35}.card-actions{position:absolute;right:9px;bottom:8px;display:flex;gap:4px;opacity:0}.card:hover .card-actions{opacity:1}.card-actions button{border:1px solid var(--line);background:#fff;border-radius:7px;font-size:10px;padding:4px 6px}
+.empty{padding:45px 20px;text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:18px}.empty b{display:block;color:var(--text);margin-bottom:5px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(5px);z-index:50;display:none;align-items:center;justify-content:center;padding:18px}.modal-backdrop.show{display:flex}.modal{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;box-shadow:0 25px 70px rgba(0,0,0,.2);padding:20px}.modal h3{margin:0 0 16px}.form{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field{display:grid;gap:5px}.field.full{grid-column:1/-1}.field label{font-size:11px;font-weight:800;color:#475467}.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:10px;padding:10px;outline:none;background:#fff}.field textarea{min-height:70px;resize:vertical}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.toast{position:fixed;right:18px;bottom:18px;background:#172033;color:#fff;padding:11px 14px;border-radius:11px;font-size:12px;font-weight:700;z-index:80;opacity:0;transform:translateY(10px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:none}
+.dark{--bg:#0b1220;--panel:#111827;--text:#eef2f6;--muted:#98a2b3;--line:#263244}.dark .topbar{background:rgba(11,18,32,.9)}.dark .search,.dark .weight-box,.dark .icon-btn,.dark .small-btn,.dark .side-note,.dark .card,.dark .nav button.active,.dark .modal{background:#111827;color:var(--text)}.dark .search,.dark input,.dark select,.dark textarea{color:var(--text);background:#0f172a;border-color:#263244}.dark .indication{background:#172033;color:#cbd5e1}.dark .card-actions button{background:#172033;color:#fff}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;overflow:visible}.nav{display:flex;overflow:auto;padding-bottom:2px}.nav button{white-space:nowrap}.side-note{display:none}.top-inner{flex-wrap:wrap}.brand{min-width:auto}.search-wrap{order:3;flex-basis:100%}}
+@media(max-width:600px){.top-inner{padding:10px 12px;gap:8px}.brand{flex:1}.brand p{display:none}.logo{width:40px;height:40px}.weight-box label{display:none}.weight-box input{width:48px}.unit{padding:0 6px}.layout{padding:12px;gap:12px}.hero{align-items:flex-start}.hero h2{font-size:20px}.hero p{font-size:11px}.actions{display:none}.cards{grid-template-columns:1fr 1fr;padding:8px;gap:8px}.card{min-height:176px;padding:11px}.drug{font-size:12px}.calc{font-size:18px}.route{font-size:9px}.card-actions{opacity:1}.cat-head{padding:11px 12px}.category{border-radius:15px}.form{grid-template-columns:1fr}.field.full{grid-column:auto}}
+@media(max-width:390px){.cards{grid-template-columns:1fr}.card{min-height:150px}}
+
+.page-switch{display:flex;gap:6px;margin:2px 0 16px;background:#fff;border:1px solid var(--line);padding:4px;border-radius:13px;width:max-content}
+.page-tab{border:0;background:transparent;border-radius:9px;padding:8px 14px;font-size:12px;font-weight:800;color:var(--muted)}
+.page-tab.active{background:#172033;color:#fff}
+.admin-page{display:none}.admin-page.show{display:block}
+.admin-toolbar{display:flex;gap:10px;margin:0 0 12px}.admin-toolbar .search{height:44px;flex:1}.admin-toolbar select{height:44px;border:1px solid var(--line);border-radius:12px;padding:0 12px;background:#fff;color:var(--text);min-width:190px}
+.admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.admin-stats div{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}.admin-stats b{display:block;font-size:22px}.admin-stats span{font-size:10px;color:var(--muted);font-weight:700}
+.admin-table-wrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto}
+.admin-table{width:100%;border-collapse:collapse;min-width:760px}.admin-table th{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:left;background:#f8fafc;padding:11px;border-bottom:1px solid var(--line)}
+.admin-table td{padding:10px 11px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:top}.admin-table tr:last-child td{border-bottom:0}.admin-table .drug-name{font-weight:900}.admin-table .dose-cell{font-weight:900;color:var(--primary)}
+.admin-actions{white-space:nowrap}.admin-actions button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:800;margin-right:3px}.admin-actions .danger{color:#dc2626}
+.admin-tip{margin-top:10px;padding:11px 13px;background:#fff;border:1px dashed var(--line);border-radius:12px;font-size:11px;color:var(--muted)}
+.cat-manager{display:grid;gap:8px}.cat-row{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:11px;padding:9px;background:#fff}.cat-row span{font-size:12px;font-weight:800}.cat-row small{color:var(--muted);margin-left:7px}
+@media(max-width:600px){.page-switch{width:100%}.page-tab{flex:1}.admin-toolbar{flex-direction:column}.admin-toolbar select{width:100%}.admin-stats{gap:7px}.admin-stats div{padding:10px}.admin-stats b{font-size:19px}}
+.dark .page-switch,.dark .admin-stats div,.dark .admin-table-wrap,.dark .admin-tip,.dark .cat-row{background:#111827}.dark .page-tab.active{background:#f8fafc;color:#172033}.dark .admin-table th{background:#0f172a}.dark .admin-actions button{background:#172033;color:#fff}.dark .admin-toolbar select{background:#0f172a;color:#fff}
+
+.auth-box{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid var(--line);border-radius:15px;padding:12px 14px;margin:10px 0}.auth-box b{display:block;font-size:12px}.auth-box small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.auth-actions{display:flex;gap:7px}@media(max-width:600px){.auth-box{align-items:flex-start;flex-direction:column}.auth-actions{width:100%}.auth-actions button{flex:1}}
+.dose-formula{font-weight:900}.calculated-label{margin-top:8px}.calc:empty{min-height:4px}
+
+/* ===== MOBILE-FIRST CLINICAL UI ===== */
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f7fb;color:#172033}
+header{position:sticky;top:0;z-index:50;background:rgba(244,247,251,.96);backdrop-filter:blur(12px);border-bottom:1px solid #e5eaf1}
+header .inner{max-width:720px;margin:auto;padding:10px 12px 8px}
+.logo{font-size:19px;font-weight:950;letter-spacing:-.6px}
+.subtitle{font-size:9px;margin-top:1px;color:#697386;font-weight:700}
+.actions{display:none}
+.content{max-width:720px;margin:auto;padding:8px 10px 80px}
+.page-switch{position:sticky;top:58px;z-index:40;width:100%;display:flex;margin:0 0 8px;padding:3px;border-radius:12px;background:#e9edf4;border:1px solid #dde3ec;box-shadow:0 3px 12px rgba(20,30,50,.06)}
+.page-tab{flex:1;border:0;background:transparent;border-radius:9px;padding:8px 5px;font-size:11px;font-weight:900;color:#687386}
+.page-tab.active{background:#172033;color:#fff}
+.hero{padding:8px 2px 6px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hero h1,.hero h2{font-size:20px;line-height:1.1;margin:0;font-weight:950;letter-spacing:-.5px}
+.hero p{font-size:9px;color:#6b7484;margin:4px 0 0}
+.hero .actions{display:none}
+.search-wrap{position:sticky;top:99px;z-index:35;padding:5px 0 7px;background:#f4f7fb}
+.search{width:100%;height:44px;border:1px solid #dce2eb;border-radius:13px;padding:0 13px;font-size:14px;background:#fff;outline:none;box-shadow:0 3px 12px rgba(20,30,50,.05)}
+.search:focus{border-color:#64748b;box-shadow:0 0 0 3px rgba(100,116,139,.12)}
+.weight-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #dce2eb;border-radius:14px;padding:8px;margin-bottom:8px;box-shadow:0 2px 8px rgba(20,30,50,.04)}
+.weight-box label{font-size:10px;font-weight:900;color:#687386;text-transform:uppercase;letter-spacing:.5px}
+.weight-box input{width:82px;height:38px;border:1px solid #dce2eb;border-radius:10px;text-align:center;font-size:18px;font-weight:950;outline:none}
+.weight-box button{width:38px;height:38px;border:1px solid #dce2eb;background:#f8fafc;border-radius:10px;font-size:20px;font-weight:900}
+.categories{display:flex;gap:6px;overflow-x:auto;padding:2px 1px 8px;scrollbar-width:none}
+.categories::-webkit-scrollbar{display:none}
+.category{flex:0 0 auto;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:900;border:1px solid var(--cat-line);background:var(--cat-bg);color:var(--cat)}
+.category.active{box-shadow:inset 0 0 0 2px currentColor}
+.card{border-left:4px solid var(--cat);background:#fff;border-top:1px solid var(--cat-line);border-right:1px solid var(--cat-line);border-bottom:1px solid var(--cat-line);border-radius:13px;padding:10px 11px;margin-bottom:7px;box-shadow:0 2px 7px rgba(20,30,50,.04)}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.drug{font-size:15px;font-weight:950;letter-spacing:-.2px}
+.route{font-size:9px;font-weight:900;color:#64748b;background:#f1f5f9;border-radius:999px;padding:4px 7px;white-space:nowrap}
+.indication{display:inline-block;font-size:9px;font-weight:800;color:#fff;background:var(--cat);border-radius:5px;padding:3px 6px;margin:5px 0 7px}
+.dose-label{font-size:8px;color:#7a8494;font-weight:900;text-transform:uppercase;letter-spacing:.7px}
+.base{font-size:17px;line-height:1.1;font-weight:950;margin-top:2px;color:#172033}
+.calc{font-size:22px;line-height:1.1;font-weight:950;color:var(--cat);min-height:0;margin-top:2px}
+.calc:empty{display:none}
+.note{font-size:9px;line-height:1.3;color:#667085;margin-top:6px;padding-top:6px;border-top:1px dashed #e2e7ee}
+.card-actions{display:none}
+.empty{padding:30px 10px;text-align:center;color:#7b8492;font-size:12px}
+.admin-page{padding-bottom:20px}
+.admin-page .hero{background:#fff;border-radius:14px;padding:12px;border:1px solid #dce2eb}
+.admin-toolbar{display:flex;flex-direction:column;gap:7px;margin:8px 0}
+.admin-toolbar .search{height:42px}
+.admin-toolbar select{height:42px;border:1px solid #dce2eb;border-radius:12px;padding:0 10px;background:#fff}
+.admin-stats{gap:6px;margin:7px 0}.admin-stats div{padding:9px;border-radius:12px}.admin-stats b{font-size:18px}
+.admin-table-wrap{border-radius:13px}
+.admin-tip{font-size:9px}
+.auth-box{border-radius:13px;padding:10px;flex-direction:column;align-items:stretch}
+.auth-actions{width:100%}.auth-actions button{flex:1}
+.dark body,.dark{background:#0b1220;color:#eef2f7}.dark header{background:rgba(11,18,32,.96);border-color:#1f2b3d}.dark .content,.dark .search-wrap{background:#0b1220}.dark .page-switch{background:#172033;border-color:#263247}.dark .page-tab{color:#aab4c3}.dark .page-tab.active{background:#f8fafc;color:#172033}.dark .search,.dark .weight-box,.dark .card,.dark .admin-page .hero,.dark .admin-stats div,.dark .admin-table-wrap,.dark .admin-tip,.dark .auth-box{background:#111a2a;border-color:#263247;color:#eef2f7}.dark .base,.dark .drug{color:#eef2f7}.dark .route,.dark .weight-box button{background:#1a2536;color:#cbd5e1;border-color:#2c3a50}.dark .note,.dark .subtitle,.dark .hero p,.dark .dose-label{color:#9aa7ba}
+@media(min-width:721px){body{max-width:720px;margin:auto}.content{padding-left:10px;padding-right:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div class="top-inner">
+    <div class="brand"><div class="logo">✚</div><div><h1>PedsDose</h1><p>Pediatric Emergency Drug Reference</p></div></div>
+    <div class="search-wrap"><span>⌕</span><input id="search" class="search" placeholder="Search drug, indication, route..." autocomplete="off"></div>
+    <div class="weight-box" title="Enter weight to calculate weight-based doses">
+      <label>⚖ Weight</label><button id="minus">−</button><input id="weight" type="number" min="0" max="300" step=".1" value=""><button id="plus">+</button><span class="unit">kg</span>
+    </div>
+    <button class="icon-btn" id="theme" title="Toggle dark mode">◐</button>
+  </div>
+</header>
+
+<main class="layout">
+  <aside class="sidebar">
+    <nav class="nav" id="nav"></nav>
+    <div class="side-note"><b>Clinical reminder</b><br>Reference only. Verify dose, concentration, maximum dose, contraindications and local pediatric/emergency protocols before administration.</div>
+  </aside>
+  <section class="content">
+    <div class="page-switch">
+      <button id="refPageBtn" class="page-tab active">📖 Reference</button>
+      <button id="adminPageBtn" class="page-tab">⚙️ Manage</button>
+    </div>
+    <div id="referencePage">
+    <div class="hero">
+      <div><h2 id="pageTitle">All Pediatric Emergency Drugs</h2><p id="subTitle">Fast weight-based reference — enter a weight to calculate doses.</p></div>
+      <div class="actions">
+  <button class="small-btn" id="exportBtn">Export</button>
+  <button class="small-btn" id="importBtn">Import</button>
+  <button class="small-btn primary-btn" id="addBtn">＋ Add drug</button>
+  <input id="fileInput" type="file" accept=".json" hidden>
+</div>
+    </div>
+    <div id="categories" class="categories"></div>
+    </div>
+
+    <div id="adminPage" class="admin-page">
+      <div class="hero">
+        <div><h2>Medication Manager</h2><p>Add, edit or remove drugs, categories, routes and dosing information.</p></div>
+        <div class="actions">
+          <button class="small-btn" id="manageCatBtn">＋ Category</button>
+          <button class="small-btn primary-btn" id="manageAddBtn">＋ Add drug</button>
+        </div>
+      </div>
+
+      <div class="admin-toolbar">
+        <input id="adminSearch" class="search" placeholder="Search medications to edit..." autocomplete="off">
+        <select id="adminCatFilter"><option value="All">All categories</option></select>
+      </div>
+
+      <div class="admin-stats">
+        <div><b id="drugCount">0</b><span>Medications</span></div>
+        <div><b id="catCount">0</b><span>Categories</span></div>
+        <div><b id="routeCount">0</b><span>Routes</span></div>
+      </div>
+
+      <div id="adminTableWrap" class="admin-table-wrap"></div>
+      <div id="authBox" class="auth-box">
+        <div><b id="authStatus">Admin access: checking…</b><small id="authHelp">Sign in to enable database editing.</small></div>
+        <div class="auth-actions">
+          <button class="small-btn" id="loginBtn">🔐 Admin login</button>
+          <button class="small-btn" id="logoutBtn" style="display:none">Sign out</button>
+        </div>
+      </div>
+      <div class="admin-tip">Firebase sync is enabled. Medication changes made by an authorized administrator are shared with every user in real time.</div>
+    </div>
+  </section>
+</main>
+</div>
+
+<div id="modalBackdrop" class="modal-backdrop">
+ <div class="modal">
+  <h3 id="modalTitle">Add medication</h3>
+  <form id="drugForm">
+   <input type="hidden" id="editId">
+   <div class="form">
+    <div class="field"><label>Drug name</label><input id="fName" required></div>
+    <div class="field"><label>Category</label><select id="fCategory"></select></div>
+    <div class="field"><label>Indication</label><input id="fIndication" placeholder="e.g. Cardiac arrest"></div>
+    <div class="field"><label>Route</label><input id="fRoute" placeholder="IV/IO"></div>
+    <div class="field"><label>Dose type</label><select id="fType"><option value="mg/kg">mg/kg</option><option value="mcg/kg">mcg/kg</option><option value="mL/kg">mL/kg</option><option value="U/kg">U/kg</option><option value="fixed">Fixed dose</option></select></div>
+    <div class="field"><label>Dose / value</label><input id="fDose" placeholder="0.1 or 0.1–0.2" required></div>
+    <div class="field full"><label>Note / maximum / repeat instructions</label><textarea id="fNote" placeholder="Optional"></textarea></div>
+   </div>
+   <div class="modal-actions"><button type="button" class="small-btn" id="cancelBtn">Cancel</button><button class="small-btn primary-btn">Save medication</button></div>
+  </form>
+ </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA-clqoD7YiAxQbI1WRg4A5hhRup4YuyrE",
+    authDomain: "ed-drugs.firebaseapp.com",
+    databaseURL: "https://ed-drugs-default-rtdb.firebaseio.com",
+    projectId: "ed-drugs",
+    storageBucket: "ed-drugs.firebasestorage.app",
+    messagingSenderId: "101110196513",
+    appId: "1:101110196513:web:40559131c06e8254093660"
+  };
+
+  const firebaseApp = initializeApp(firebaseConfig);
+  window.pedsDB = getDatabase(firebaseApp);
+  window.pedsAuth = getAuth(firebaseApp);
+  window.pedsDBFns = {ref,set,remove,onValue,signInWithEmailAndPassword,signOut,onAuthStateChanged};
+  window.dispatchEvent(new Event("pedsFirebaseReady"));
+</script>
+
+<script>
+const defaultDrugs = [
+{name:"Epinephrine",category:"Cardiac Arrest & Arrhythmias",indication:"Cardiac arrest • PEA/asystole",route:"IV/IO",type:"mg/kg",dose:"0.01",note:"0.1 mg/mL • Repeat q3–5 min"},
+{name:"Amiodarone",category:"Cardiac Arrest & Arrhythmias",indication:"VF/pVT",route:"IV/IO",type:"mg/kg",dose:"5",note:""},
+{name:"Lidocaine",category:"Cardiac Arrest & Arrhythmias",indication:"VF/pVT",route:"IV/IO",type:"mg/kg",dose:"1",note:""},
+{name:"Atropine",category:"Cardiac Arrest & Arrhythmias",indication:"Bradycardia",route:"IV/IO",type:"mg/kg",dose:"0.02",note:""},
+{name:"Adenosine",category:"Cardiac Arrest & Arrhythmias",indication:"SVT",route:"IV/IO",type:"mg/kg",dose:"0.1 → 0.2",note:"First dose 0.1 mg/kg, then 0.2 mg/kg"},
+{name:"0.9% NaCl",category:"Shock & Sepsis",indication:"Shock / sepsis",route:"IV/IO",type:"mL/kg",dose:"10–20",note:"Bolus • Reassess"},
+{name:"D10",category:"Shock & Sepsis",indication:"Hypoglycemia",route:"IV/IO",type:"mL/kg",dose:"2",note:""},
+{name:"Epinephrine",category:"Anaphylaxis & Allergy",indication:"Anaphylaxis",route:"IM",type:"mg/kg",dose:"0.01",note:"1 mg/mL (1:1000) • Max 0.5 mg"},
+{name:"Diphenhydramine",category:"Anaphylaxis & Allergy",indication:"Allergic reaction",route:"IV/IM/PO",type:"mg/kg",dose:"1",note:""},
+{name:"Methylprednisolone",category:"Anaphylaxis & Allergy",indication:"Allergy / asthma",route:"IV/IO",type:"mg/kg",dose:"1–2",note:""},
+{name:"Midazolam",category:"Seizures",indication:"Seizure / status",route:"IV/IO",type:"mg/kg",dose:"0.15",note:""},
+{name:"Midazolam",category:"Seizures",indication:"Seizure / status",route:"IM",type:"mg/kg",dose:"0.2",note:""},
+{name:"Midazolam",category:"Seizures",indication:"Seizure / status",route:"IN / buccal",type:"mg/kg",dose:"0.3",note:""},
+{name:"Diazepam",category:"Seizures",indication:"Seizure / status",route:"IV/IO",type:"mg/kg",dose:"0.1–0.4",note:""},
+{name:"Diazepam",category:"Seizures",indication:"Seizure / status",route:"PR",type:"mg/kg",dose:"0.3–0.5",note:""},
+{name:"Levetiracetam",category:"Seizures",indication:"Status • 2nd line",route:"IV",type:"mg/kg",dose:"40–60",note:""},
+{name:"Phenytoin",category:"Seizures",indication:"Status • 2nd line",route:"IV",type:"mg/kg",dose:"20",note:""},
+{name:"Phenobarbital",category:"Seizures",indication:"Status • 2nd line",route:"IV",type:"mg/kg",dose:"20",note:""},
+{name:"Salbutamol",category:"Asthma & Wheeze",indication:"Raised K / hyperkalemia",route:"Nebulized",type:"fixed",dose:"2.5–5 mg",note:"Fixed dose"},
+{name:"Insulin + glucose",category:"Shock & Sepsis",indication:"Raised K / hyperkalemia",route:"IV",type:"U/kg",dose:"0.1",note:"Regular insulin • glucose per protocol"},
+{name:"Salbutamol",category:"Asthma & Wheeze",indication:"Asthma / wheeze",route:"Neb",type:"fixed",dose:"2.5 mg (<20 kg) / 5 mg (>20 kg)",note:"Weight-based fixed dose"},
+{name:"Ipratropium",category:"Asthma & Wheeze",indication:"Asthma / wheeze",route:"Neb",type:"fixed",dose:"0.25–0.5 mg",note:"Fixed dose"},
+{name:"Magnesium sulfate",category:"Asthma & Wheeze",indication:"Severe asthma",route:"IV",type:"mg/kg",dose:"25–50",note:""},
+{name:"Calcium chloride 10%",category:"Shock & Sepsis",indication:"Raised K / hyperkalemia",route:"IV/IO",type:"mg/kg",dose:"20",note:""},
+{name:"Dexamethasone",category:"Airway / Croup",indication:"Croup",route:"PO/IV/IM",type:"mg/kg",dose:"0.15–0.6",note:""},
+{name:"Adrenaline",category:"Airway / Croup",indication:"Croup",route:"Neb",type:"mL/kg",dose:"0.5",note:"1:1000 • Max 5 mL"},
+{name:"Ketamine",category:"Airway / RSI",indication:"RSI • induction",route:"IV/IO",type:"mg/kg",dose:"1–2",note:""},
+{name:"Etomidate",category:"Airway / RSI",indication:"RSI • induction",route:"IV",type:"mg/kg",dose:"0.3",note:""},
+{name:"Rocuronium",category:"Airway / RSI",indication:"RSI • paralysis",route:"IV/IO",type:"mg/kg",dose:"1–1.2",note:""},
+{name:"Succinylcholine",category:"Airway / RSI",indication:"RSI • paralysis",route:"IV/IO",type:"mg/kg",dose:"1–2",note:""},
+{name:"Morphine",category:"Pain & Fever",indication:"Pain",route:"IV",type:"mg/kg",dose:"0.05–0.1",note:""},
+{name:"Fentanyl",category:"Pain & Fever",indication:"Pain",route:"IV/IN",type:"mcg/kg",dose:"1–2",note:""},
+{name:"Ketamine",category:"Pain & Fever",indication:"Analgesia",route:"IV",type:"mg/kg",dose:"0.1–0.3",note:""},
+{name:"Paracetamol",category:"Pain & Fever",indication:"Fever / pain",route:"PO/IV",type:"mg/kg",dose:"15",note:""},
+{name:"Ibuprofen",category:"Pain & Fever",indication:"Fever / pain",route:"PO",type:"mg/kg",dose:"10",note:""},
+{name:"Ondansetron",category:"Other Emergencies",indication:"Vomiting",route:"PO/IV/IM",type:"mg/kg",dose:"0.15",note:""},
+{name:"Naloxone",category:"Other Emergencies",indication:"Opioid toxicity",route:"IV/IM/IN",type:"mg/kg",dose:"0.1",note:""},
+{name:"Flumazenil",category:"Other Emergencies",indication:"Benzodiazepine toxicity",route:"IV",type:"mg/kg",dose:"0.01",note:""},
+{name:"Zet",category:"Anaphylaxis & Allergy",indication:"Anaphylaxis / allergy",route:"PO",type:"fixed",dose:"See local protocol",note:"User-supplied medication entry — verify exact generic name and dose before clinical use"}
+];
+
+const cats = {
+"Cardiac Arrest & Arrhythmias":{icon:"♥",color:"#dc2626",bg:"#fff6f5",line:"#fecaca"},
+"Seizures":{icon:"✦",color:"#7c3aed",bg:"#faf7ff",line:"#ddd6fe"},
+"Shock & Sepsis":{icon:"✹",color:"#ea580c",bg:"#fff9f2",line:"#fed7aa"},
+"Anaphylaxis & Allergy":{icon:"⚕",color:"#0891b2",bg:"#f2fcfe",line:"#bae6fd"},
+"Asthma & Wheeze":{icon:"♧",color:"#16a34a",bg:"#f3fbf4",line:"#bbf7d0"},
+"Airway / Croup":{icon:"◉",color:"#0284c7",bg:"#f3f9ff",line:"#bfdbfe"},
+"Airway / RSI":{icon:"⚡",color:"#2563eb",bg:"#f4f8ff",line:"#bfdbfe"},
+"Pain & Fever":{icon:"✚",color:"#d97706",bg:"#fffbf1",line:"#fde68a"},
+"Other Emergencies":{icon:"●",color:"#db2777",bg:"#fff6fa",line:"#fbcfe8"}
+};
+let drugs = JSON.parse(localStorage.getItem("pedsDoseDrugs") || "null") || defaultDrugs.map((d,i)=>({...d,id:"d"+i}));
+let activeCat="All Drugs", query="";
+let weight=parseFloat(localStorage.getItem("pedsDoseWeight")||"") || "";
+
+let firebaseReady=false;
+let firebaseAdmin=false;
+function saveLocal(){
+  localStorage.setItem("pedsDoseDrugs",JSON.stringify(drugs));
+  localStorage.setItem("pedsDoseWeight",weight||"");
+}
+function save(){
+  saveLocal();
+  if(firebaseReady && firebaseAdmin){
+    const clean={};
+    drugs.forEach(d=>clean[d.id]=d);
+    window.pedsDBFns.set(window.pedsDBFns.ref(window.pedsDB,"medications"),clean).catch(e=>{
+      console.error(e); toast("Firebase save failed");
+    });
+  }
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function parseRange(s){
+  const nums=String(s).match(/-?\d+(?:\.\d+)?/g); return nums?nums.map(Number):[];
+}
+function calculated(d){
+  if(!weight || d.type==="fixed") return d.dose;
+  const nums=parseRange(d.dose);
+  if(!nums.length) return d.dose;
+  if(d.type==="mg/kg"||d.type==="mcg/kg"||d.type==="mL/kg"||d.type==="U/kg"){
+    const vals=nums.map(n=>n*weight);
+    const unit=d.type==="mg/kg"?"mg":d.type==="mcg/kg"?"mcg":d.type==="mL/kg"?"mL":"U";
+    if(vals.length===1)return fmt(vals[0])+" "+unit;
+    return fmt(vals[0])+"–"+fmt(vals[1])+" "+unit;
+  }
+  return d.dose;
+}
+function fmt(n){return Number.isInteger(n)?n:n.toFixed(2).replace(/0+$/,"").replace(/\.$/,"")}
+function filtered(){
+ return drugs.filter(d=>(activeCat==="All Drugs"||d.category===activeCat) &&
+   (query==="" || (d.name+" "+d.indication+" "+d.route+" "+d.category+" "+d.note).toLowerCase().includes(query.toLowerCase())));
+}
+function renderNav(){
+ const nav=document.getElementById("nav");
+ const all=["All Drugs",...Object.keys(cats)];
+ nav.innerHTML=all.map(c=>`<button class="${activeCat===c?"active":""}" data-cat="${esc(c)}">${c==="All Drugs"?"⌂":cats[c]?.icon||"●"} <span>${esc(c)}</span></button>`).join("");
+ nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{activeCat=b.dataset.cat;document.getElementById("pageTitle").textContent=activeCat==="All Drugs"?"All Pediatric Emergency Drugs":activeCat;renderNav();render()});
+}
+function card(d){
+ const c=cats[d.category]||{color:"#0f766e",bg:"#f5fffd",line:"#ccfbf1",icon:"●"};
+ const base=d.type==="fixed"?d.dose:(d.dose+" "+d.type);
+ const hasCalculated=!!weight && d.type!=="fixed";
+ return `<article class="card" style="--cat:${c.color};--cat-line:${c.line}">
+   <div class="card-top"><div class="drug">${esc(d.name)}</div><div class="route">${esc(d.route)}</div></div>
+   <div class="indication">${esc(d.indication||"Emergency use")}</div>
+   <div class="dose-label">Dose</div>
+   <div class="base dose-formula">${esc(base)}</div>
+   <div class="dose-label calculated-label">${hasCalculated?"Calculated dose":""}</div>
+   <div class="calc">${hasCalculated?esc(calculated(d)):""}</div>
+   ${d.note?`<div class="note">${esc(d.note)}</div>`:""}
+   <div class="card-actions"><button onclick="editDrug('${d.id}')">Edit</button><button onclick="deleteDrug('${d.id}')">Delete</button></div>
+ </article>`
+}
+function render(){
+ const list=filtered(), container=document.getElementById("categories");
+ if(!list.length){container.innerHTML=`<div class="empty"><b>No medications found</b>Try another drug, indication, route or category.</div>`;return}
+ let groups=activeCat==="All Drugs"?Object.keys(cats):[activeCat];
+ container.innerHTML=groups.map(cat=>{
+   const arr=list.filter(d=>d.category===cat); if(!arr.length)return "";
+   const c=cats[cat];
+   return `<section class="category" style="--cat:${c.color};--cat-bg:${c.bg};--cat-line:${c.line}" id="${cat.replace(/\W/g,"-")}">
+     <div class="cat-head"><div class="cat-title"><span class="cat-icon">${c.icon}</span>${cat}</div><div class="cat-count">${arr.length} medication${arr.length===1?"":"s"}</div></div>
+     <div class="cards">${arr.map(card).join("")}</div>
+   </section>`
+ }).join("");
+ document.getElementById("subTitle").textContent=weight?`Weight ${fmt(weight)} kg • calculated doses shown in each card.`:`Fast weight-based reference • enter a weight to calculate doses.`;
+}
+function setWeight(v){weight=Math.max(0,Math.min(300,parseFloat(v)||0));document.getElementById("weight").value=weight||"";save();render()}
+document.getElementById("weight").oninput=e=>setWeight(e.target.value);
+document.getElementById("minus").onclick=()=>setWeight((weight||0)-0.5);
+document.getElementById("plus").onclick=()=>setWeight((weight||0)+0.5);
+document.getElementById("search").oninput=e=>{query=e.target.value.trim();render()};
+document.getElementById("theme").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("pedsDoseDark",document.body.classList.contains("dark"))};
+if(localStorage.getItem("pedsDoseDark")==="true")document.body.classList.add("dark");
+
+const modal=document.getElementById("modalBackdrop");
+function openModal(d=null){
+ document.getElementById("modalTitle").textContent=d?"Edit medication":"Add medication";
+ document.getElementById("editId").value=d?.id||"";
+ document.getElementById("fName").value=d?.name||"";
+ document.getElementById("fIndication").value=d?.indication||"";
+ document.getElementById("fRoute").value=d?.route||"";
+ document.getElementById("fType").value=d?.type||"mg/kg";
+ document.getElementById("fDose").value=d?.dose||"";
+ document.getElementById("fNote").value=d?.note||"";
+ document.getElementById("fCategory").innerHTML=Object.keys(cats).map(c=>`<option ${c===d?.category?"selected":""}>${esc(c)}</option>`).join("");
+ modal.classList.add("show");setTimeout(()=>document.getElementById("fName").focus(),50)
+}
+document.getElementById("addBtn").onclick=()=>showPage("admin");
+document.getElementById("cancelBtn").onclick=()=>modal.classList.remove("show");
+modal.onclick=e=>{if(e.target===modal)modal.classList.remove("show")};
+document.getElementById("drugForm").onsubmit=e=>{
+ e.preventDefault();
+ if(!firebaseAdmin){alert("Please sign in as admin first.");return}
+ const id=document.getElementById("editId").value;
+ const obj={id:id||"d"+Date.now(),name:document.getElementById("fName").value.trim(),category:document.getElementById("fCategory").value,indication:document.getElementById("fIndication").value.trim(),route:document.getElementById("fRoute").value.trim(),type:document.getElementById("fType").value,dose:document.getElementById("fDose").value.trim(),note:document.getElementById("fNote").value.trim()};
+ if(id)drugs=drugs.map(d=>d.id===id?obj:d);else drugs.push(obj);
+ save();modal.classList.remove("show");render();toast(id?"Medication updated":"Medication added")
+};
+window.editDrug=id=>{if(!firebaseAdmin){alert("Please sign in as admin first.");return} openModal(drugs.find(d=>d.id===id))};
+window.deleteDrug=id=>{
+ const d=drugs.find(x=>x.id===id);if(!d)return;
+ if(!firebaseAdmin){alert("Please sign in as admin first.");return}
+ if(confirm(`Delete ${d.name}?`)){drugs=drugs.filter(x=>x.id!==id);save();render();toast("Medication deleted")}
+};
+function toast(t){const x=document.getElementById("toast");x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),1800)}
+document.getElementById("exportBtn").onclick=()=>{
+ const blob=new Blob([JSON.stringify(drugs,null,2)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download="pedsdose-medications.json";a.click();URL.revokeObjectURL(a.href)
+};
+document.getElementById("importBtn").onclick=()=>document.getElementById("fileInput").click();
+document.getElementById("fileInput").onchange=e=>{
+ const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x))throw 0;drugs=x.map((d,i)=>({...d,id:d.id||"i"+Date.now()+i}));save();render();toast("Medications imported")}catch{alert("Invalid JSON medication file.")}};
+ r.readAsText(f);e.target.value=""
+};
+document.getElementById("weight").value=weight||"";
+renderNav();render();
+
+// ---- Two-page manager ----
+const refPage = document.getElementById("referencePage");
+const adminPage = document.getElementById("adminPage");
+const refPageBtn = document.getElementById("refPageBtn");
+const adminPageBtn = document.getElementById("adminPageBtn");
+
+function showPage(page){
+  const admin = page==="admin";
+  refPage.style.display = admin ? "none" : "block";
+  adminPage.classList.toggle("show",admin);
+  refPageBtn.classList.toggle("active",!admin);
+  adminPageBtn.classList.toggle("active",admin);
+  if(admin) renderAdmin();
+}
+refPageBtn.onclick=()=>showPage("reference");
+adminPageBtn.onclick=()=>showPage("admin");
+
+function populateAdminCategories(){
+  const s=document.getElementById("adminCatFilter");
+  if(!s)return;
+  const current=s.value;
+  s.innerHTML='<option value="All">All categories</option>'+Object.keys(cats).map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  if(Object.keys(cats).includes(current))s.value=current;
+}
+function renderAdmin(){
+  populateAdminCategories();
+  const q=(document.getElementById("adminSearch")?.value||"").toLowerCase().trim();
+  const cf=document.getElementById("adminCatFilter")?.value||"All";
+  const arr=drugs.filter(d=>(cf==="All"||d.category===cf) && (!q||(d.name+" "+d.indication+" "+d.route+" "+d.dose+" "+d.category).toLowerCase().includes(q)));
+  document.getElementById("drugCount").textContent=drugs.length;
+  document.getElementById("catCount").textContent=Object.keys(cats).length;
+  document.getElementById("routeCount").textContent=new Set(drugs.map(d=>d.route).filter(Boolean)).size;
+  document.getElementById("adminTableWrap").innerHTML=arr.length?`
+    <table class="admin-table"><thead><tr><th>Drug</th><th>Category</th><th>Indication</th><th>Route</th><th>Dose</th><th>Note</th><th>Actions</th></tr></thead>
+    <tbody>${arr.map(d=>`<tr>
+      <td><div class="drug-name">${esc(d.name)}</div></td>
+      <td>${esc(d.category)}</td><td>${esc(d.indication)}</td><td>${esc(d.route)}</td>
+      <td class="dose-cell">${esc(d.dose)} ${d.type==="fixed"?"":esc(d.type)}</td><td>${esc(d.note||"")}</td>
+      <td class="admin-actions"><button onclick="editDrug('${d.id}')">Edit</button><button class="danger" onclick="deleteDrug('${d.id}')">Delete</button></td>
+    </tr>`).join("")}</tbody></table>`:
+    `<div class="empty">No medications match your search.</div>`;
+}
+document.getElementById("adminSearch").oninput=renderAdmin;
+document.getElementById("adminCatFilter").onchange=renderAdmin;
+
+// Keep admin list refreshed whenever medication data changes.
+const oldRender=render;
+render=function(){oldRender();if(adminPage.classList.contains("show"))renderAdmin()};
+
+document.getElementById("manageAddBtn").onclick=()=>{if(!firebaseAdmin){alert("Please sign in as admin first.");return}openModal()};
+document.getElementById("manageCatBtn").onclick=()=>{if(!firebaseAdmin){alert("Please sign in as admin first.");return}openCategoryModal()};
+
+function openCategoryModal(editName=null){
+  const isEdit=!!editName;
+  const old=document.getElementById("categoryModal");
+  if(old)old.remove();
+  const names=Object.keys(cats);
+  const c=isEdit?cats[editName]:null;
+  const box=document.createElement("div");
+  box.id="categoryModal";box.className="modal-backdrop show";
+  box.innerHTML=`<div class="modal">
+    <h3>${isEdit?"Edit category":"Add category"}</h3>
+    <form id="catForm">
+      <div class="form">
+        <div class="field"><label>Category name</label><input id="catName" required value="${esc(editName||"")}"></div>
+        <div class="field"><label>Icon</label><input id="catIcon" value="${esc(c?.icon||"●")}" maxlength="3"></div>
+        <div class="field"><label>Theme color</label><input id="catColor" type="color" value="${c?.color||"#0f766e"}"></div>
+        <div class="field"><label>Background</label><input id="catBg" type="color" value="${c?.bg||"#f5fffd"}"></div>
+        <div class="field"><label>Border color</label><input id="catLine" type="color" value="${c?.line||"#ccfbf1"}"></div>
+      </div>
+      <div class="modal-actions"><button type="button" class="small-btn" id="catCancel">Cancel</button><button class="small-btn primary-btn">Save category</button></div>
+    </form>
+  </div>`;
+  document.body.appendChild(box);
+  box.querySelector("#catCancel").onclick=()=>box.remove();
+  box.onclick=e=>{if(e.target===box)box.remove()};
+  box.querySelector("#catForm").onsubmit=e=>{
+    e.preventDefault();
+    const name=box.querySelector("#catName").value.trim();
+    if(!name)return;
+    if(isEdit && name!==editName){
+      if(cats[name]){alert("A category with this name already exists.");return}
+      cats[name]=cats[editName];delete cats[editName];
+      drugs=drugs.map(d=>d.category===editName?{...d,category:name}:d);
+    }
+    cats[name]={icon:box.querySelector("#catIcon").value||"●",color:box.querySelector("#catColor").value,bg:box.querySelector("#catBg").value,line:box.querySelector("#catLine").value};
+    save();
+    if(firebaseReady && firebaseAdmin){
+      const categoryData={};Object.keys(cats).forEach(k=>categoryData[k]=cats[k]);
+      window.pedsDBFns.set(window.pedsDBFns.ref(window.pedsDB,"categories"),categoryData);
+    }
+    box.remove();renderNav();render();renderAdmin();toast(isEdit?"Category updated":"Category added");
+  };
+}
+function showCategoryList(){
+  const old=document.getElementById("categoryListModal");if(old)old.remove();
+  const box=document.createElement("div");box.id="categoryListModal";box.className="modal-backdrop show";
+  box.innerHTML=`<div class="modal"><h3>Manage categories</h3><div class="cat-manager">
+  ${Object.keys(cats).map(c=>`<div class="cat-row"><span>${cats[c].icon} ${esc(c)} <small>${drugs.filter(d=>d.category===c).length} drugs</small></span><span><button class="small-btn" onclick="openCategoryModal(${JSON.stringify(c)});document.getElementById('categoryListModal')?.remove()">Edit</button> <button class="small-btn" onclick="deleteCategory(${JSON.stringify(c)})">Delete</button></span></div>`).join("")}
+  </div><div class="modal-actions"><button class="small-btn" id="closeCats">Close</button><button class="small-btn primary-btn" id="newCat2">＋ Add category</button></div></div>`;
+  document.body.appendChild(box);
+  box.querySelector("#closeCats").onclick=()=>box.remove();
+  box.querySelector("#newCat2").onclick=()=>{box.remove();openCategoryModal()};
+}
+window.deleteCategory=name=>{
+  if(Object.keys(cats).length<=1){alert("At least one category must remain.");return}
+  const count=drugs.filter(d=>d.category===name).length;
+  if(!confirm(`Delete "${name}"? ${count} medication(s) in this category will need reassignment.`))return;
+  if(count){alert("This category still contains medications. Edit/reassign them first, then delete the category.");return}
+  delete cats[name];save();
+  if(firebaseReady && firebaseAdmin){
+    const categoryData={};Object.keys(cats).forEach(k=>categoryData[k]=cats[k]);
+    window.pedsDBFns.set(window.pedsDBFns.ref(window.pedsDB,"categories"),categoryData);
+  }
+  renderNav();render();renderAdmin();toast("Category deleted");
+};
+
+// Change the category button to open the full category manager.
+document.getElementById("manageCatBtn").onclick=()=>{if(!firebaseAdmin){alert("Please sign in as admin first.");return}showCategoryList()};
+
+// Make drug modal category selector refresh whenever categories change.
+const oldOpenModal=openModal;
+openModal=function(d=null){oldOpenModal(d);document.getElementById("fCategory").innerHTML=Object.keys(cats).map(c=>`<option ${c===d?.category?"selected":""}>${esc(c)}</option>`).join("")};
+
+
+// ---- Firebase realtime synchronization ----
+const ADMIN_UID = "VGZEI0YX70W1IOFORIGu1HFAhlB2";
+let firebaseSyncStarted=false;
+function initFirebaseSync(){
+  if(firebaseSyncStarted || !window.pedsDB || !window.pedsAuth)return;
+  firebaseSyncStarted=true;
+  const {ref,onValue,onAuthStateChanged}=window.pedsDBFns;
+  firebaseReady=true;
+
+  onValue(ref(window.pedsDB,"categories"), snap=>{
+    const data=snap.val();
+    if(data && typeof data==="object"){Object.assign(cats,data);renderNav();render();if(document.getElementById("adminPage").classList.contains("show"))renderAdmin();}
+  });
+  onValue(ref(window.pedsDB,"medications"), snap=>{
+    const data=snap.val();
+    if(data && typeof data==="object"){
+      drugs=Object.values(data);
+      saveLocal();
+      renderNav();render();
+      if(document.getElementById("adminPage").classList.contains("show"))renderAdmin();
+    } else if(firebaseAdmin && drugs.length){
+      // First authorized session seeds an empty database with the built-in dataset.
+      save();
+    }
+  });
+
+  onAuthStateChanged(window.pedsAuth,user=>{
+    firebaseAdmin=!!user && user.uid===ADMIN_UID;
+    const status=document.getElementById("authStatus"), help=document.getElementById("authHelp");
+    const login=document.getElementById("loginBtn"), logout=document.getElementById("logoutBtn");
+    if(user && firebaseAdmin){
+      status.textContent="Admin access: signed in";
+      help.textContent=user.email||"Authorized admin";
+      login.style.display="none";logout.style.display="inline-block";
+      renderAdmin();
+      toast("Admin signed in");
+    }else if(user){
+      status.textContent="Admin access: denied";
+      help.textContent="This Firebase account is not the configured administrator.";
+      login.style.display="none";logout.style.display="inline-block";
+      renderAdmin();
+    }else{
+      status.textContent="Admin access: signed out";
+      help.textContent="Sign in to enable database editing.";
+      login.style.display="inline-block";logout.style.display="none";
+      firebaseAdmin=false;
+      renderAdmin();
+    }
+  });
+}
+document.getElementById("loginBtn").onclick=async()=>{
+  if(!window.pedsAuth){alert("Firebase did not initialize. Please open the browser console (F12) and send me the red error.");return}
+  const email=prompt("Admin email:");
+  if(!email)return;
+  const password=prompt("Admin password:");
+  if(!password)return;
+  try{
+    await window.pedsDBFns.signInWithEmailAndPassword(window.pedsAuth,email,password);
+  }catch(e){alert("Login failed: "+(e.code||e.message))}
+};
+document.getElementById("logoutBtn").onclick=()=>window.pedsDBFns.signOut(window.pedsAuth);
+
+// Prevent database writes from the normal/reference side.
+window.addEventListener("pedsFirebaseReady", initFirebaseSync);
+// Also try immediately in case the Firebase module has already initialized.
+if(window.pedsDB && window.pedsAuth) initFirebaseSync();
+
+</script>
+
+<div id="mobileNav" class="mobile-nav">
+  <button id="bottomRef">📖<span>Reference</span></button>
+  <button id="bottomManage">⚙️<span>Manage</span></button>
+</div>
+<style>
+.mobile-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-top:1px solid #dce2eb;padding:5px max(10px,env(safe-area-inset-left)) calc(5px + env(safe-area-inset-bottom));box-shadow:0 -4px 15px rgba(20,30,50,.08)}
+.mobile-nav button{flex:1;border:0;background:transparent;color:#687386;font-size:9px;font-weight:900;padding:4px;border-radius:9px}.mobile-nav button:first-child{color:#172033;background:#eef2f7}
+.dark .mobile-nav{background:rgba(17,26,42,.97);border-color:#263247}.dark .mobile-nav button{color:#9aa7ba}.dark .mobile-nav button:first-child{background:#263247;color:#fff}
+</style>
+<script>
+document.getElementById("bottomRef").onclick=()=>showPage("reference");
+document.getElementById("bottomManage").onclick=()=>showPage("admin");
+const _showPage=showPage;
+showPage=function(page){
+  _showPage(page);
+  document.getElementById("bottomRef").style.background=page==="reference"?"#eef2f7":"transparent";
+  document.getElementById("bottomRef").style.color=page==="reference"?"#172033":"#687386";
+  document.getElementById("bottomManage").style.background=page==="admin"?"#eef2f7":"transparent";
+  document.getElementById("bottomManage").style.color=page==="admin"?"#172033":"#687386";
+};
+</script>
+</body>
+</html>
